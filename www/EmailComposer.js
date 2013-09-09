@@ -16,7 +16,7 @@ EmailComposer.ComposeResultType = {
 
 EmailComposer.prototype.showEmailComposer = function(subject, body,
 		toRecipients, ccRecipients, bccRecipients, bIsHTML, attachments, attachmentsData) {
-	console.log("****************************AVVIATO");
+ 
 	var args = {};
 	if (toRecipients)
 		args.toRecipients = toRecipients;
