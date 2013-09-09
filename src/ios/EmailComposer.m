@@ -149,7 +149,7 @@
     } else {
         [self returnWithCode:RETURN_CODE_EMAIL_NOTSENT];
     }
-    [mailComposer release];
+     
 }
 
 
@@ -192,7 +192,7 @@
         return nil;
     CFStringRef pathExtension, type;
     // Get the UTI from the file's extension
-    pathExtension = (CFStringRef)extension;
+    pathExtension = (__bridge CFStringRef)extension;
     type = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, NULL);
     
     // Converting UTI to a mime type
