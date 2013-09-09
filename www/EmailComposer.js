@@ -1,4 +1,6 @@
-function EmailComposer() {
+var exec = require('cordova/exec');
+
+var EmailComposer = function () {
 	this.resultCallback = null; // Function
 }
 
@@ -32,7 +34,7 @@ EmailComposer.prototype.showEmailComposer = function(subject, body,
 		args.attachments = attachments;
     if (attachmentsData)
         args.attachmentsData = attachmentsData;
-        
+
 	cordova.exec(null, null, "EmailComposer", "showEmailComposer", [ args ]);
 }
 
@@ -48,17 +50,4 @@ EmailComposer.prototype._didFinishWithResult = function(res) {
 	this.resultCallback(res);
 }
 
-cordova.addConstructor(function() {
-	console.log("****************************");
-	if (!window.plugins) {
-		window.plugins = {};
-	}
-
-	// shim to work in 1.5 and 1.6
-	if (!window.Cordova) {
-		window.Cordova = cordova;
-	}
-	;
-
-	window.plugins.emailComposer = new EmailComposer();
-});
+module.exports = new EmailComposer();
