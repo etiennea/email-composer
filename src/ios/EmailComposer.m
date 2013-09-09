@@ -196,7 +196,7 @@
     type = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, NULL);
     
     // Converting UTI to a mime type
-   return (NSString *)UTTypeCopyPreferredTagWithClass(type, kUTTagClassMIMEType);
+   return (__bridge NSString *)UTTypeCopyPreferredTagWithClass(type, kUTTagClassMIMEType);
 }
 
 @end
