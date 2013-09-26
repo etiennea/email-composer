@@ -1,68 +1,56 @@
-/**
- * 
- * Phonegap Email composer plugin for Android with multiple attachments handling
- * 
- * Version 1.0
- * 
- * Guido Sabatini 2012
- *
- * Version 1.3
- *
- * Jia Chang Jee 2013
- *
- */
+package org.apache.cordova.emailcomposer;
 
-package org.apache.cordova;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.util.ArrayList;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CallbackContext;
+//import org.apache.cordova.CordovaInterface;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.util.ArrayList;
+
+//import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.text.Html;
-import android.util.Base64;
-
-import org.apache.cordova.api.CallbackContext;
-import org.apache.cordova.api.CordovaPlugin;
-import org.apache.cordova.api.LOG;
+import android.util.Log;
 
 public class EmailComposer extends CordovaPlugin {
 
 	@Override
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-
-		if ("showEmailComposer".equals(action)) {
-			try {
-				JSONObject parameters = args.getJSONObject(0);
-				if (parameters != null) {
-					sendEmail(parameters);
-				}
-			} catch (Exception e) {
-				LOG.e("EmailComposer", "Unable to send email");
+	public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
+		if (action.equals("showEmailComposer")) {
+			final JSONObject parameters = args.getJSONObject(0);
+			if(parameters != null){
+				cordova.getThreadPool().execute(new Runnable(){
+					public void run(){
+						try{
+							sendEmail(parameters);	
+		            		//callbackContext.success("Sent email successfully");
+						} catch(Exception e){
+							callbackContext.error(e.toString());
+						}
+					}
+				});
 			}
-			callbackContext.success();
 			return true;
 		}
-		return false;  // Returning false results in a "MethodNotFound" error.
+		return false;
 	}
 
 	private void sendEmail(JSONObject parameters) {
-		
+
 		final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND_MULTIPLE);
-		
+
 		//String callback = parameters.getString("callback");
 
 		boolean isHTML = false;
 		try {
-			isHTML = parameters.getBoolean("bIsHTML");
+			isHTML = parameters.getBoolean("isHTML");
 		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling isHTML param: " + e.toString());
+			Log.e("EmailComposer", "Error handling isHTML param: " + e.toString());
 		}
 
 		if (isHTML) {
@@ -78,7 +66,7 @@ public class EmailComposer extends CordovaPlugin {
 				emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
 			}
 		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling subject param: " + e.toString());
+			Log.e("EmailComposer", "Error handling subject param: " + e.toString());
 		}
 
 		// setting body
@@ -92,9 +80,10 @@ public class EmailComposer extends CordovaPlugin {
 				}
 			}
 		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling body param: " + e.toString());
+			Log.e("EmailComposer", "Error handling body param: " + e.toString());
 		}
 
+		/*
 		// setting TO recipients
 		try {
 			JSONArray toRecipients = parameters.getJSONArray("toRecipients");
@@ -106,7 +95,7 @@ public class EmailComposer extends CordovaPlugin {
 				emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, to);
 			}
 		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling toRecipients param: " + e.toString());
+			Log.e("EmailComposer", "Error handling toRecipients param: " + e.toString());
 		}
 
 		// setting CC recipients
@@ -120,7 +109,7 @@ public class EmailComposer extends CordovaPlugin {
 				emailIntent.putExtra(android.content.Intent.EXTRA_CC, cc);
 			}
 		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling ccRecipients param: " + e.toString());
+			Log.e("EmailComposer", "Error handling ccRecipients param: " + e.toString());
 		}
 
 		// setting BCC recipients
@@ -134,7 +123,7 @@ public class EmailComposer extends CordovaPlugin {
 				emailIntent.putExtra(android.content.Intent.EXTRA_BCC, bcc);
 			}
 		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling bccRecipients param: " + e.toString());
+			Log.e("EmailComposer", "Error handling bccRecipients param: " + e.toString());
 		}
 
 		// setting attachments
@@ -151,7 +140,7 @@ public class EmailComposer extends CordovaPlugin {
 							uris.add(uri);
 						}
 					} catch (Exception e) {
-						LOG.e("EmailComposer", "Error adding an attachment: " + e.toString());
+						Log.e("EmailComposer", "Error adding an attachment: " + e.toString());
 					}
 				}
 				if (uris.size() > 0) {
@@ -159,46 +148,19 @@ public class EmailComposer extends CordovaPlugin {
 				}
 			}
 		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling attachments param: " + e.toString());
+			Log.e("EmailComposer", "Error handling attachments param: " + e.toString());
 		}
+		*/
 
-		// setting attachments data
-		try {
-			JSONArray attachmentsData = parameters.getJSONArray("attachmentsData");
-			if (attachmentsData != null && attachmentsData.length() > 0) {
-				ArrayList<Uri> uris = new ArrayList<Uri>();
-				for (int i=0; i<attachmentsData.length(); i++) {
-					JSONArray fileInformation = attachmentsData.getJSONArray(i);
-					
-					String filename = fileInformation.getString(0);
-					String filedata = fileInformation.getString(1);
-					
-					byte[] fileBytes = Base64.decode(filedata, 0);
-					File filePath = new File(this.cordova.getContext().getCacheDir() + "/" + filename);
-					FileOutputStream os = new FileOutputStream(filePath, true);
-					os.write(fileBytes);
-					os.flush();
-					os.close();
-					
-					Uri uri = Uri.fromFile(filePath);
-					uris.add(uri);
-				}
-				if (uris.size() > 0) {
-					emailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-				}
-			}
-		} catch (Exception e) {
-			LOG.e("EmailComposer", "Error handling attachmentsData param: " + e.toString());
-		}
-		
-		this.cordova.startActivityForResult(this, emailIntent, 0);
+		//this.cordova.startActivityForResult(this, emailIntent, 0);
+		this.cordova.getActivity().startActivity(emailIntent);
 	}
-	
+
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		// TODO handle callback
 		super.onActivityResult(requestCode, resultCode, intent);
-		LOG.e("EmailComposer", "ResultCode: " + resultCode);
+		Log.e("EmailComposer", "ResultCode: " + resultCode);
 		// IT DOESN'T SEEM TO HANDLE RESULT CODES
 	}
 
